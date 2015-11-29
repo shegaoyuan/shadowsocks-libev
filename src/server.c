@@ -1129,6 +1129,7 @@ static server_t * new_server(int fd, listen_ctx_t *listener)
     server->chunk = (chunk_t *)malloc(sizeof(chunk_t));
     memset(server->chunk, 0, sizeof(chunk_t));
     server->chunk->buf = malloc(sizeof(buffer_t));
+    balloc(server->chunk->buf, BUF_SIZE);
 
     cork_dllist_add(&connections, &server->entries);
 
@@ -1140,8 +1141,11 @@ static void free_server(server_t *server)
     cork_dllist_remove(&server->entries);
 
     if (server->chunk != NULL) {
-        bfree(server->chunk->buf);
-        free(server->chunk->buf);
+        if (server->chunk->buf != NULL) {
+            bfree(server->chunk->buf);
+            free(server->chunk->buf);
+            server->chunk->buf = NULL;
+        }
         free(server->chunk);
         server->chunk = NULL;
     }

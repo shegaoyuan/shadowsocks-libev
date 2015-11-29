@@ -1114,7 +1114,7 @@ int ss_encrypt_all(buffer_t *plain, int method, int auth)
 
         rand_bytes(iv, iv_len);
         cipher_context_set_iv(&evp, iv, iv_len, 1);
-        memcpy(cipher, iv, iv_len);
+        memcpy(cipher->array, iv, iv_len);
 
         if (auth) {
             ss_onetimeauth(plain, iv);
@@ -1122,12 +1122,12 @@ int ss_encrypt_all(buffer_t *plain, int method, int auth)
         }
 
         if (method >= SALSA20) {
-            crypto_stream_xor_ic((uint8_t *)(cipher + iv_len),
+            crypto_stream_xor_ic((uint8_t *)(cipher->array + iv_len),
                                  (const uint8_t *)plain->array, (uint64_t)(p_len),
                                  (const uint8_t *)iv,
                                  0, enc_key, method);
         } else {
-            err = cipher_context_update(&evp, (uint8_t *)(cipher + iv_len),
+            err = cipher_context_update(&evp, (uint8_t *)(cipher->array + iv_len),
                                         &c_len, (const uint8_t *)plain->array,
                                         p_len);
         }
@@ -1146,7 +1146,7 @@ int ss_encrypt_all(buffer_t *plain, int method, int auth)
         cipher_context_release(&evp);
 
         brealloc(plain, iv_len + c_len, plain->capacity);
-        memcpy(plain, cipher, iv_len + c_len);
+        memcpy(plain->array, cipher->array, iv_len + c_len);
         plain->len = iv_len + c_len;
 
         return 0;
@@ -1255,7 +1255,7 @@ int ss_decrypt_all(buffer_t *cipher, int method, int auth)
         buffer_t *plain = &tmp;
 
         uint8_t iv[MAX_IV_LENGTH];
-        memcpy(iv, cipher, iv_len);
+        memcpy(iv, cipher->array, iv_len);
         cipher_context_set_iv(&evp, iv, iv_len, 0);
 
         if (method >= SALSA20) {
@@ -1294,7 +1294,7 @@ int ss_decrypt_all(buffer_t *cipher, int method, int auth)
         cipher_context_release(&evp);
 
         brealloc(cipher, p_len, plain->capacity);
-        memcpy(cipher, plain, p_len);
+        memcpy(cipher->array, plain->array, p_len);
         cipher->len = p_len;
 
         return 0;
@@ -1319,7 +1319,7 @@ int ss_decrypt(buffer_t *cipher, enc_ctx_t *ctx)
         size_t iv_len = 0;
         int err = 1;
 
-        brealloc(&tmp, p_len, cipher->capacity);
+        brealloc(&tmp, c_len, cipher->capacity);
         buffer_t *plain = &tmp;
 
         if (!ctx->init) {
@@ -1364,7 +1364,7 @@ int ss_decrypt(buffer_t *cipher, enc_ctx_t *ctx)
             }
         } else {
             err = cipher_context_update(&ctx->evp, (uint8_t *)plain->array, &p_len,
-                                        (const uint8_t *)(cipher + iv_len),
+                                        (const uint8_t *)(cipher->array + iv_len),
                                         c_len - iv_len);
         }
 

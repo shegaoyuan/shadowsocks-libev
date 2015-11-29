@@ -497,6 +497,7 @@ struct query_ctx *new_query_ctx(char *buf, size_t len)
     ctx->buf = malloc(sizeof(buffer_t));
     balloc(ctx->buf, len);
     memcpy(ctx->buf->array, buf, len);
+    ctx->buf->len = len;
     return ctx;
 }
 
