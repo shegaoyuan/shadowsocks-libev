@@ -416,34 +416,34 @@ static void server_recv_cb(EV_P_ ev_io *w, int revents)
                     abuf->len += in_addr_len + 2;
 
                     if (acl || verbose) {
-                        uint16_t p = ntohs(*(uint16_t *)(buf + 4 + in_addr_len));
-                        dns_ntop(AF_INET, (const void *)(buf + 4),
+                        uint16_t p = ntohs(*(uint16_t *)(buf->array + 4 + in_addr_len));
+                        dns_ntop(AF_INET, (const void *)(buf->array + 4),
                                  host, INET_ADDRSTRLEN);
                         sprintf(port, "%d", p);
                     }
                 } else if (request->atyp == 3) {
                     // Domain name
-                    uint8_t name_len = *(uint8_t *)(buf + 4);
+                    uint8_t name_len = *(uint8_t *)(buf->array + 4);
                     abuf->array[abuf->len++] = name_len;
-                    memcpy(abuf->array + abuf->len, buf + 4 + 1, name_len + 2);
+                    memcpy(abuf->array + abuf->len, buf->array + 4 + 1, name_len + 2);
                     abuf->len += name_len + 2;
 
                     if (acl || verbose) {
                         uint16_t p =
-                            ntohs(*(uint16_t *)(buf + 4 + 1 + name_len));
-                        memcpy(host, buf + 4 + 1, name_len);
+                            ntohs(*(uint16_t *)(buf->array + 4 + 1 + name_len));
+                        memcpy(host, buf->array + 4 + 1, name_len);
                         host[name_len] = '\0';
                         sprintf(port, "%d", p);
                     }
                 } else if (request->atyp == 4) {
                     // IP V6
                     size_t in6_addr_len = sizeof(struct in6_addr);
-                    memcpy(abuf->array + abuf->len, buf + 4, in6_addr_len + 2);
+                    memcpy(abuf->array + abuf->len, buf->array + 4, in6_addr_len + 2);
                     abuf->len += in6_addr_len + 2;
 
                     if (acl || verbose) {
-                        uint16_t p = ntohs(*(uint16_t *)(buf + 4 + in6_addr_len));
-                        dns_ntop(AF_INET6, (const void *)(buf + 4),
+                        uint16_t p = ntohs(*(uint16_t *)(buf->array + 4 + in6_addr_len));
+                        dns_ntop(AF_INET6, (const void *)(buf->array + 4),
                                  host, INET6_ADDRSTRLEN);
                         sprintf(port, "%d", p);
                     }
